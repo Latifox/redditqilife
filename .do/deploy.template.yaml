@@ -4,7 +4,7 @@ spec:
   - name: web
     git:
       branch: main
-      repo_clone_url: https://github.com/YOUR_USERNAME/YOUR_REPO.git
+      repo_clone_url: https://github.com/latifox/redditqilife.git
     build_command: pip install -r requirements.txt
     run_command: cd src && gunicorn --worker-tmp-dir /dev/shm --workers=2 --bind=0.0.0.0:8080 main:app
     envs:

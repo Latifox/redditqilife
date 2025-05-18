@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Bot Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #ff4500;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: white !important;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+        }
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 0.75rem;
+        }
+        .log-container {
+            background-color: #212529;
+            color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+        }
+        .log-line {
+            margin-bottom: 3px;
+        }
+        .log-info {
+            color: #17a2b8;
+        }
+        .log-warning {
+            color: #ffc107;
+        }
+        .log-error {
+            color: #dc3545;
+        }
+        .control-btn {
+            margin-right: 10px;
+            border-radius: 5px;
+        }
+        .chart-container {
+            height: 300px;
+        }
+        .api-key-input {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .sidebar {
+            background-color: #343a40;
+            color: white;
+            min-height: calc(100vh - 56px);
+        }
+        .sidebar-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 10px 15px;
+            display: block;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .sidebar-link i {
+            margin-right: 10px;
+        }
+        .main-content {
+            padding: 20px;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-robot"></i> Reddit Bot Dashboard
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <div class="d-flex align-items-center">
+                            <span class="text-white me-2">API Key:</span>
+                            <input type="password" id="apiKeyInput" class="form-control form-control-sm api-key-input" placeholder="Entrez votre clé API">
+                            <button id="saveApiKey" class="btn btn-sm btn-light ms-2">Sauvegarder</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3 col-lg-2 p-0">
+                <div class="sidebar p-3">
+                    <a href="#dashboard" class="sidebar-link active" data-section="dashboard">
+                        <i class="bi bi-speedometer2"></i> Tableau de bord
+                    </a>
+                    <a href="#logs" class="sidebar-link" data-section="logs">
+                        <i class="bi bi-journal-text"></i> Logs
+                    </a>
+                    <a href="#config" class="sidebar-link" data-section="config">
+                        <i class="bi bi-gear"></i> Configuration
+                    </a>
+                    <a href="#stats" class="sidebar-link" data-section="stats">
+                        <i class="bi bi-graph-up"></i> Statistiques
+                    </a>
+                    <a href="#help" class="sidebar-link" data-section="help">
+                        <i class="bi bi-question-circle"></i> Aide
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Dashboard Section -->
+                <div id="dashboard" class="content-section">
+                    <h2 class="mb-4">Tableau de bord</h2>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Statut du Bot</span>
+                                    <span id="botStatus" class="badge bg-secondary status-badge">Chargement...</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex mb-3">
+                                        <button id="startBot" class="btn btn-success control-btn">
+                                            <i class="bi bi-play-fill"></i> Démarrer
+                                        </button>
+                                        <button id="stopBot" class="btn btn-danger control-btn">
+                                            <i class="bi bi-stop-fill"></i> Arrêter
+                                        </button>
+                                        <button id="runManualCycle" class="btn btn-primary control-btn">
+                                            <i class="bi bi-arrow-repeat"></i> Cycle manuel
+                                        </button>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <tbody>
+                                                <tr>
+                                                    <td>Mode:</td>
+                                                    <td id="botMode">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Commentaires aujourd'hui:</td>
+                                                    <td id="commentsToday">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Total commentaires:</td>
+                                                    <td id="totalComments">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Dernier commentaire:</td>
+                                                    <td id="lastComment">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Subreddits surveillés:</td>
+                                                    <td id="monitoredSubreddits">-</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Heures actives:</td>
+                                                    <td id="activeHours">-</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Activité récente</div>
+                                <div class="card-body">
+                                    <div id="recentActivity" class="log-container">
+                                        <div class="text-center text-muted">
+                                            Chargement des logs...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">Activité des commentaires (7 derniers jours)</div>
+                                <div class="card-body">
+                                    <div id="commentChart" class="chart-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Logs Section -->
+                <div id="logs" class="content-section d-none">
+                    <h2 class="mb-4">Logs du système</h2>
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Logs complets</span>
+                            <button id="refreshLogs" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-arrow-clockwise"></i> Rafraîchir
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="fullLogs" class="log-container">
+                                <div class="text-center text-muted">
+                                    Chargement des logs...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Configuration Section -->
+                <div id="config" class="content-section d-none">
+                    <h2 class="mb-4">Configuration</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Paramètres généraux</div>
+                                <div class="card-body">
+                                    <form id="configForm">
+                                        <div class="mb-3">
+                                            <label for="subreddits" class="form-label">Subreddits à surveiller</label>
+                                            <input type="text" class="form-control" id="subreddits" placeholder="python,programming,technology">
+                                            <div class="form-text">Séparez les noms par des virgules</div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col">
+                                                <label for="activeHoursStart" class="form-label">Heure de début</label>
+                                                <input type="number" class="form-control" id="activeHoursStart" min="0" max="23" placeholder="9">
+                                            </div>
+                                            <div class="col">
+                                                <label for="activeHoursEnd" class="form-label">Heure de fin</label>
+                                                <input type="number" class="form-control" id="activeHoursEnd" min="0" max="23" placeholder="22">
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div class="col">
+                                                <label for="minPostScore" class="form-label">Score minimum</label>
+                                                <input type="number" class="form-control" id="minPostScore" min="1" placeholder="5">
+                                            </div>
+                                            <div class="col">
+                                                <label for="maxPostAge" class="form-label">Âge max (heures)</label>
+                                                <input type="number" class="form-control" id="maxPostAge" min="1" placeholder="12">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="commentRateLimit" class="form-label">Délai entre commentaires (sec)</label>
+                                            <input type="number" class="form-control" id="commentRateLimit" min="60" placeholder="300">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="forbiddenKeywords" class="form-label">Mots-clés interdits</label>
+                                            <input type="text" class="form-control" id="forbiddenKeywords" placeholder="nsfw,politics,religion">
+                                            <div class="form-text">Séparez les mots par des virgules</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="dryRunMode">
+                                                <label class="form-check-label" for="dryRunMode">
+                                                    Mode dry-run (ne pas poster réellement)
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Sauvegarder la configuration</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">Produits</div>
+                                <div class="card-body">
+                                    <div id="productsEditor" class="mb-3">
+                                        <textarea class="form-control" id="productsJson" rows="10"></textarea>
+                                    </div>
+                                    <button id="saveProducts" class="btn btn-primary">Sauvegarder les produits</button>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header">Personas</div>
+                                <div class="card-body">
+                                    <div id="personasEditor" class="mb-3">
+                                        <textarea class="form-control" id="personasJson" rows="10"></textarea>
+                                    </div>
+                                    <button id="savePersonas" class="btn btn-primary">Sauvegarder les personas</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistics Section -->
+                <div id="stats" class="content-section d-none">
+                    <h2 class="mb-4">Statistiques</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Performance par produit</div>
+                                <div class="card-body">
+                                    <div id="productChart" class="chart-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">Rapport de performance</div>
+                                <div class="card-body">
+                                    <div id="performanceReport">
+                                        <div class="text-center text-muted">
+                                            Chargement des statistiques...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Help Section -->
+                <div id="help" class="content-section d-none">
+                    <h2 class="mb-4">Aide</h2>
+                    <div class="card">
+                        <div class="card-header">Guide d'utilisation</div>
+                        <div class="card-body">
+                            <h5>Comment démarrer</h5>
+                            <p>Pour commencer à utiliser le bot Reddit, suivez ces étapes :</p>
+                            <ol>
+                                <li>Configurez votre clé API dans la barre de navigation</li>
+                                <li>Allez dans la section Configuration pour définir les subreddits à surveiller</li>
+                                <li>Ajoutez vos produits et personas</li>
+                                <li>Retournez au tableau de bord et cliquez sur "Démarrer"</li>
+                            </ol>
+                            
+                            <h5>Configuration Reddit</h5>
+                            <p>Pour utiliser ce bot, vous devez configurer les identifiants Reddit dans le fichier .env :</p>
+                            <ul>
+                                <li>REDDIT_CLIENT_ID - Obtenu depuis votre compte développeur Reddit</li>
+                                <li>REDDIT_CLIENT_SECRET - Obtenu depuis votre compte développeur Reddit</li>
+                                <li>REDDIT_USERNAME - Votre nom d'utilisateur Reddit</li>
+                                <li>REDDIT_PASSWORD - Votre mot de passe Reddit</li>
+                            </ul>
+                            
+                            <h5>Configuration OpenAI</h5>
+                            <p>Pour la génération de commentaires, vous devez configurer une clé API OpenAI :</p>
+                            <ul>
+                                <li>OPENAI_API_KEY - Votre clé API OpenAI</li>
+                                <li>OPENAI_MODEL - Le modèle à utiliser (par défaut: gpt-4o-mini)</li>
+                            </ul>
+                            
+                            <h5>Mode Dry-Run</h5>
+                            <p>Le mode dry-run vous permet de tester le bot sans poster réellement de commentaires sur Reddit. Activez-le dans la section Configuration.</p>
+                            
+                            <h5>Besoin d'aide supplémentaire ?</h5>
+                            <p>Consultez la documentation complète ou contactez le support technique.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // API Key Management
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const saveApiKeyBtn = document.getElementById('saveApiKey');
+        
+        // Load API key from localStorage
+        if (localStorage.getItem('redditBotApiKey')) {
+            apiKeyInput.value = localStorage.getItem('redditBotApiKey');
+        }
+        
+        saveApiKeyBtn.addEventListener('click', () => {
+            localStorage.setItem('redditBotApiKey', apiKeyInput.value);
+            alert('Clé API sauvegardée !');
+            loadBotStatus(); // Refresh data with new API key
+        });
+        
+        // Navigation
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        const contentSections = document.querySelectorAll('.content-section');
+        
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Update active link
+                sidebarLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Show corresponding section
+                const sectionId = link.getAttribute('data-section');
+                contentSections.forEach(section => {
+                    if (section.id === sectionId) {
+                        section.classList.remove('d-none');
+                    } else {
+                        section.classList.add('d-none');
+                    }
+                });
+            });
+        });
+        
+        // API Functions
+        function getApiKey() {
+            return localStorage.getItem('redditBotApiKey') || '';
+        }
+        
+        async function fetchApi(endpoint, method = 'GET', body = null) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'X-API-Key': getApiKey(),
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                if (body && (method === 'POST' || method === 'PUT')) {
+                    options.body = JSON.stringify(body);
+                }
+                
+                const response = await fetch(`/api/${endpoint}`, options);
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        alert('Clé API invalide ou manquante. Veuillez vérifier votre clé API.');
+                    }
+                    throw new Error(`Erreur API: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Erreur API:', error);
+                return null;
+            }
+        }
+        
+        // Bot Control Functions
+        async function loadBotStatus() {
+            const status = await fetchApi('status');
+            if (!status) return;
+            
+            // Update status badge
+            const botStatusBadge = document.getElementById('botStatus');
+            if (status.active) {
+                botStatusBadge.textContent = 'Actif';
+                botStatusBadge.className = 'badge bg-success status-badge';
+            } else {
+                botStatusBadge.textContent = 'Inactif';
+                botStatusBadge.className = 'badge bg-danger status-badge';
+            }
+            
+            // Update status details
+            document.getElementById('botMode').textContent = status.dry_run ? 'Dry-Run' : 'Production';
+            document.getElementById('commentsToday').textContent = status.comments_posted_today;
+            document.getElementById('totalComments').textContent = status.total_comments_posted;
+            document.getElementById('monitoredSubreddits').textContent = status.monitored_subreddits.join(', ');
+            document.getElementById('activeHours').textContent = status.active_hours;
+            
+            // Format last comment time
+            if (status.last_comment_time > 0) {
+                const date = new Date(status.last_comment_time * 1000);
+                document.getElementById('lastComment').textContent = date.toLocaleString();
+            } else {
+                document.getElementById('lastComment').textContent = 'Aucun';
+            }
+        }
+        
+        // Start bot
+        document.getElementById('startBot').addEventListener('click', async () => {
+            const result = await fetchApi('start', 'POST');
+            if (result && result.success) {
+                alert('Bot démarré avec succès !');
+                loadBotStatus();
+            }
+        });
+        
+        // Stop bot
+        document.getElementById('stopBot').addEventListener('click', async () => {
+            const result = await fetchApi('stop', 'POST');
+            if (result && result.success) {
+                alert('Bot arrêté avec succès !');
+                loadBotStatus();
+            }
+        });
+        
+        // Run manual cycle
+        document.getElementById('runManualCycle').addEventListener('click', async () => {
+            const result = await fetchApi('run', 'POST');
+            if (result && result.success) {
+                alert(`Cycle manuel exécuté ! ${result.stats.comments_posted} commentaires postés.`);
+                loadBotStatus();
+                loadLogs();
+            }
+        });
+        
+        // Load logs
+        async function loadLogs() {
+            const result = await fetchApi('logs');
+            if (!result) return;
+            
+            const recentActivityContainer = document.getElementById('recentActivity');
+            const fullLogsContainer = document.getElementById('fullLogs');
+            
+            // Process logs
+            const logLines = result.logs.map(line => {
+                let className = 'log-line';
+                if (line.includes('ERROR')) className += ' log-error';
+                else if (line.includes('WARNING')) className += ' log-warning';
+                else className += ' log-info';
+                
+                return `<div class="${className}">${line}</div>`;
+            });
+            
+            // Update recent activity (last 10 logs)
+            recentActivityContainer.innerHTML = logLines.slice(-10).join('');
+            
+            // Update full logs
+            fullLogsContainer.innerHTML = logLines.join('');
+            
+            // Scroll to bottom
+            recentActivityContainer.scrollTop = recentActivityContainer.scrollHeight;
+            fullLogsContainer.scrollTop = fullLogsContainer.scrollHeight;
+        }
+        
+        // Refresh logs button
+        document.getElementById('refreshLogs').addEventListener('click', loadLogs);
+        
+        // Load configuration
+        async function loadConfig() {
+            const config = await fetchApi('config');
+            if (!config) return;
+            
+            // Update form fields
+            document.getElementById('subreddits').value = config.config.subreddits.join(',');
+            document.getElementById('activeHoursStart').value = config.config.active_hours_start;
+            document.getElementById('activeHoursEnd').value = config.config.active_hours_end;
+            document.getElementById('minPostScore').value = config.config.min_post_score;
+            document.getElementById('maxPostAge').value = config.config.max_post_age_hours;
+            document.getElementById('commentRateLimit').value = config.config.comment_rate_limit_seconds;
+            document.getElementById('forbiddenKeywords').value = config.config.forbidden_keywords.join(',');
+            
+            // Load products and personas
+            try {
+                const productsResponse = await fetch('/products.json');
+                if (productsResponse.ok) {
+                    const products = await productsResponse.json();
+                    document.getElementById('productsJson').value = JSON.stringify(products, null, 2);
+                }
+                
+                const personasResponse = await fetch('/personas.json');
+                if (personasResponse.ok) {
+                    const personas = await personasResponse.json();
+                    document.getElementById('personasJson').value = JSON.stringify(personas, null, 2);
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des fichiers JSON:', error);
+            }
+        }
+        
+        // Load statistics
+        async function loadStats() {
+            const stats = await fetchApi('stats');
+            if (!stats) return;
+            
+            // Update performance report
+            const reportContainer = document.getElementById('performanceReport');
+            
+            if (stats.latest_report) {
+                const report = stats.latest_report;
+                let html = `
+                    <h5>Rapport du ${report.date}</h5>
+                    <table class="table table-sm">
+                        <tr>
+                            <td>Commentaires aujourd'hui:</td>
+                            <td>${report.comments_posted_today}</td>
+                        </tr>
+                        <tr>
+                            <td>Total commentaires:</td>
+                            <td>${report.total_comments_posted}</td>
+                        </tr>
+                        <tr>
+                            <td>Subreddits actifs:</td>
+                            <td>${report.active_subreddits.join(', ')}</td>
+                        </tr>
+                    </table>
+                    
+                    <h6 class="mt-3">Produits utilisés:</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Utilisations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                for (const [id, product] of Object.entries(report.products_used)) {
+                    html += `
+                        <tr>
+                            <td>${product.name}</td>
+                            <td>${product.count}</td>
+                        </tr>
+                    `;
+                }
+                
+                html += `
+                        </tbody>
+                    </table>
+                `;
+                
+                reportContainer.innerHTML = html;
+                
+                // Create product chart
+                const productData = Object.entries(report.products_used).map(([id, product]) => ({
+                    name: product.name,
+                    count: product.count
+                }));
+                
+                createProductChart(productData);
+            } else {
+                reportContainer.innerHTML = '<div class="text-center text-muted">Aucun rapport disponible</div>';
+            }
+            
+            // Create comment activity chart (mock data for now)
+            createCommentChart();
+        }
+        
+        // Create charts
+        function createProductChart(data) {
+            const ctx = document.getElementById('productChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.productChart) {
+                window.productChart.destroy();
+            }
+            
+            window.productChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.map(item => item.name),
+                    datasets: [{
+                        data: data.map(item => item.count),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                            '#FF9F40', '#8AC249', '#EA526F', '#23B5D3', '#279AF1'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        
+        function createCommentChart() {
+            const ctx = document.getElementById('commentChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.commentChart) {
+                window.commentChart.destroy();
+            }
+            
+            // Generate last 7 days
+            const labels = [];
+            const today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(today.getDate() - i);
+                labels.push(date.toLocaleDateString());
+            }
+            
+            // Mock data - in real app, this would come from API
+            const data = [3, 7, 5, 12, 8, 10, 6];
+            
+            window.commentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Commentaires',
+                        data: data,
+                        borderColor: '#FF4500',
+                        backgroundColor: 'rgba(255, 69, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Save configuration
+        document.getElementById('configForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            alert('Fonctionnalité de sauvegarde de configuration à implémenter');
+            // In a real app, this would send the form data to the API
+        });
+        
+        // Save products
+        document.getElementById('saveProducts').addEventListener('click', async () => {
+            alert('Fonctionnalité de sauvegarde des produits à implémenter');
+            // In a real app, this would send the JSON data to the API
+        });
+        
+        // Save personas
+        document.getElementById('savePersonas').addEventListener('click', async () => {
+            alert('Fonctionnalité de sauvegarde des personas à implémenter');
+            // In a real app, this would send the JSON data to the API
+        });
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBotStatus();
+            loadLogs();
+            loadConfig();
+            loadStats();
+            
+            // Refresh data every 30 seconds
+            setInterval(() => {
+                loadBotStatus();
+                loadLogs();
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

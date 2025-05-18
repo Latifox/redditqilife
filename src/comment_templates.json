@@ -1,0 +1,10 @@
+{
+  "default": "I found a solution to this problem! {product_name} really helped me. You can find it here: {product_url}",
+  "question": "Have you tried {product_name}? It's exactly what you need for this case. Here's the link: {product_url}",
+  "experience": "I had the same problem and {product_name} solved it. I highly recommend it: {product_url}",
+  "solution": "I solved my problem with {product_name}. It's really a powerful tool: {product_url}",
+  "recommendation": "I strongly recommend {product_name} to solve this problem: {product_url}",
+  "testimonial": "I was very satisfied with using {product_name}. It's exactly what I needed: {product_url}",
+  "comparison": "I compared {product_name} with other products and it's the best: {product_url}",
+  "alternative": "If you can't use {product_name}, you can try {alternative_product_name}: {alternative_product_url}"
+}

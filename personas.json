@@ -1,0 +1,17 @@
+{
+  "helpful": {
+    "name": "Health Enthusiast",
+    "tone": "Enthusiastic, supportive, personal",
+    "style": "informative"
+  },
+  "enthusiastic": {
+    "name": "Wellness Professional",
+    "tone": "Informative, authoritative, helpful",
+    "style": "energetic"
+  },
+  "expert": {
+    "name": "Curious Explorer",
+    "tone": "Curious, open-minded, conversationa",
+    "style": "detailed"
+  }
+}

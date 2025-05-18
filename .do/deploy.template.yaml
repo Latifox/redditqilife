@@ -1,0 +1,66 @@
+spec:
+  name: reddit-bot
+  services:
+  - name: web
+    git:
+      branch: main
+      repo_clone_url: https://github.com/YOUR_USERNAME/YOUR_REPO.git
+    build_command: pip install -r requirements.txt
+    run_command: cd src && gunicorn --worker-tmp-dir /dev/shm --workers=2 --bind=0.0.0.0:8080 main:app
+    envs:
+    - key: FLASK_APP
+      scope: RUN_TIME
+      value: src.main
+    - key: FLASK_DEBUG
+      scope: RUN_TIME
+      value: "0"
+    # Add your own environment variables here
+    - key: REDDIT_CLIENT_ID
+      scope: RUN_TIME
+      value: ""
+      type: SECRET
+    - key: REDDIT_CLIENT_SECRET
+      scope: RUN_TIME
+      value: ""
+      type: SECRET
+    - key: REDDIT_USERNAME
+      scope: RUN_TIME
+      value: ""
+      type: SECRET
+    - key: REDDIT_PASSWORD
+      scope: RUN_TIME
+      value: ""
+      type: SECRET
+    - key: REDDIT_USER_AGENT
+      scope: RUN_TIME
+      value: "RedditBot/1.0"
+    - key: OPENAI_API_KEY
+      scope: RUN_TIME
+      value: ""
+      type: SECRET
+    - key: OPENAI_MODEL
+      scope: RUN_TIME
+      value: "gpt-4o-mini"
+    - key: SUBREDDITS
+      scope: RUN_TIME
+      value: "python,programming,technology"
+    - key: ACTIVE_HOURS_START
+      scope: RUN_TIME
+      value: "9"
+    - key: ACTIVE_HOURS_END
+      scope: RUN_TIME
+      value: "22"
+    - key: MIN_POST_SCORE
+      scope: RUN_TIME
+      value: "5"
+    - key: MAX_POST_AGE_HOURS
+      scope: RUN_TIME
+      value: "12"
+    - key: COMMENT_RATE_LIMIT_SECONDS
+      scope: RUN_TIME
+      value: "300"
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /health 

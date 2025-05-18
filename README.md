@@ -2,6 +2,8 @@
 
 Cette application permet d'automatiser la surveillance des subreddits, le filtrage des publications pertinentes, et la publication de commentaires promotionnels pour vos produits.
 
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/latifox/redditqilife/tree/main)
+
 ## Fonctionnalités
 
 - **Surveillance automatique** de subreddits configurables
@@ -137,15 +139,51 @@ Endpoints principaux :
 
 ## Déploiement
 
-Pour un déploiement en production, il est recommandé d'utiliser Gunicorn ou uWSGI avec un serveur web comme Nginx.
+### Avec Docker (Recommandé)
 
-Exemple avec Gunicorn :
+L'application peut facilement être déployée avec Docker :
+
+```bash
+# Build et lancer les containers 
+docker-compose up -d --build
+
+# Voir les logs
+docker-compose logs -f
+
+# Arrêter les containers
+docker-compose down
+```
+
+### Configuration Docker
+
+Le déploiement Docker inclut :
+- Un container web pour l'application Flask
+- Un container nginx pour servir l'application et gérer HTTPS
+- Un container certbot pour les certificats SSL
+- Persistance des données avec volumes Docker
+
+### Avec Gunicorn (Alternative)
+
+Pour un déploiement en production sans Docker, il est recommandé d'utiliser Gunicorn avec un serveur web comme Nginx.
 
 ```bash
 pip install gunicorn
 cd src
 gunicorn --bind 0.0.0.0:5000 main:app
 ```
+
+### Déploiement sur Digital Ocean
+
+Cliquez sur le bouton "Deploy to DO" en haut de ce README pour déployer automatiquement l'application sur Digital Ocean App Platform.
+
+Lors du déploiement, assurez-vous de configurer les variables d'environnement suivantes :
+- REDDIT_CLIENT_ID
+- REDDIT_CLIENT_SECRET
+- REDDIT_USERNAME
+- REDDIT_PASSWORD
+- REDDIT_USER_AGENT
+- OPENAI_API_KEY
+- OPENAI_MODEL
 
 ## Licence
 
